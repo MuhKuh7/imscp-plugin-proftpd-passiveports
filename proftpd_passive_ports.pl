@@ -49,32 +49,26 @@ my $portMax = '65534';
 
 sub configurePassivePorts
 {
-    my $fileContent = shift;
+	my $fileContent = shift;
 
 	my $newFileContent = '';
 	my $found = 0;
 
 	my $passivePorts = "PassivePorts               $portMin $portMax";
 
-	open my $fh, '<', $fileContent;
-	while (<$fh>) {
-		if (/^(#)?PassivePorts/) {
-			if (!$found) {
-				$newFileContent .= $passivePorts . "\n";
-				$found = 1;	
-			}
-		}
-		else {
-			$newFileContent .= $_;
-		}
-	}
-	close $fh;
 	
-	if (!$found) {
-		$newFileContent .= "\n" . $passivePorts . "\n";
+	# handle case when PassivePorts is already in the file but commented out
+	if ($$fileContent =~ /^#PassivePorts/m && $$fileContent !~ /^PassivePorts/m) {
+		$$fileContent =~ s/^#PassivePorts.*/$passivePorts/m;
 	}
-	
-	$$fileContent = $newFileContent;
+	# handle case when PassivePorts is already in the file
+	elsif ($$fileContent =~ /^PassivePorts/m) {
+		$$fileContent =~ s/^PassivePorts.*/$passivePorts/m;
+	}
+	# otherwise put the line at the end
+	else {
+		$$fileContent .= "\n$passivePorts";
+	}
 
     0;
 }
